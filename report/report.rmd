@@ -1,0 +1,108 @@
+# Overview
+
+This project leverages **machine learning algorithms** to predict diabetes status using the **NHANES dataset** (2009-2012). The study analyzes risk factors such as **Age**, **BMI**, **Gender**, and **Physical Activity**. Multiple classifiers were implemented, trained, and evaluated to compare their predictive performance.
+
+---
+
+# Objectives
+
+1. Investigate diabetes-related health and demographic factors.
+2. Split the data into training (80%) and testing (20%) subsets.
+3. Train and evaluate at least three classifiers:
+   - **Decision Tree**
+   - **K-Nearest Neighbors (KNN)**
+   - **Naive Bayes**
+   - **Logistic Regression**
+4. Evaluate the models using metrics such as **accuracy** and **confusion matrix**.
+
+---
+
+# Data Summary
+
+The **NHANES dataset** contains data from 7,555 respondents and 76 variables. The variables analyzed in this project are:
+- **Age**: Numeric
+- **Gender**: Factor (Male/Female)
+- **BMI**: Numeric (Body Mass Index)
+- **Diabetes**: Binary response variable (Yes/No)
+- **HHIncome**: Factor (Household Income Range)
+- **PhysActive**: Factor (Physically Active: Yes/No)
+
+A total of **7,555 observations** were used after removing missing values (`NA`).
+
+---
+
+# Methodology
+
+### Data Preparation
+The dataset was subsetted to focus on key variables, and missing values were removed using the following:
+```r
+people <- NHANES %>%
+  dplyr::select(Age, Gender, Diabetes, BMI, HHIncome, PhysActive) %>% 
+  drop_na()
+
+-------------------------------------------
+##Splitting the Data
+An 80/20 split was applied to divide the data into training and test sets:
+
+set.seed(123)
+train_indices <- sample(nrow(people), size = 0.8 * nrow(people))
+train_data <- people[train_indices, ]
+test_data <- people[-train_indices, ]
+
+##Models and Results
+#Decision Tree Classifier is built using the rpart package:
+
+mod_diabetes <- decision_tree(mode = "classification") %>%
+  set_engine("rpart", control = rpart.control(cp = 0.005, minbucket = 30)) %>%
+  fit(Diabetes ~ Age + BMI + Gender + PhysActive, data = people)
+Accuracy: 91.25%
+
+#Naive Bayes Classifier
+Implemented using e1071:
+
+nb_model <- naiveBayes(formula = form, data = train_data)
+
+Accuracy: 90.60%
+
+#Logistic Regression Classifier
+Developed using the parsnip package:
+
+logistic_model <- logistic_reg(mode = "classification") %>%
+  set_engine("glm") %>%
+  fit(formula = form, data = train_data)
+
+Accuracy: 91.66% (Highest among all classifiers)
+
+## Visualizations
+#Decision Tree Plot
+The decision tree visualizes splits in Age and BMI thresholds:
+
+library(partykit)
+plot(as.party(mod_diabetes$fit))
+
+Key Insights:
+
+Risk of diabetes increases with Age ≥ 52.5.
+High BMI ≥ 40 significantly contributes to diabetes risk.
+Overfitting is observed for ages 61-67.
+
+
+###Key Insights and Discussion
+##Class Imbalance:
+
+Only ~9% of the sample population has diabetes.
+Most models achieve high accuracy due to the dominance of the majority class (No for diabetes).
+
+#Best Model:
+Logistic Regression demonstrated the highest accuracy (91.66%) and generalizability.
+
+#Model Comparisons:
+
+All models performed similarly in accuracy, but logistic regression outperformed others slightly.
+The Decision Tree provided interpretability but showed overfitting tendencies in specific age groups.
+                                                                              
+#Limitations:
+The dataset's imbalance affects the sensitivity of all models.
+Additional evaluation metrics like precision, recall, and F1-score should be considered for minority class (Yes for diabetes).
+
+
